@@ -218,6 +218,42 @@ interface PukuState {
 
 const NODE_KINDS: ShapeKind[] = ['rectangle', 'ellipse', 'diamond', 'text', 'sticky'];
 
+const SCENE_STORAGE_KEY = 'puku:canvas_pages_v1';
+
+function readStoredPages(): { pages: PukuPage[]; activePageId: string; scene: Scene } | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = window.localStorage.getItem(SCENE_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (parsed && Array.isArray(parsed.pages) && parsed.pages.length > 0 && parsed.activePageId) {
+      const active = parsed.pages.find((p: any) => p.id === parsed.activePageId) ?? parsed.pages[0];
+      if (active && active.scene && Array.isArray(active.scene.shapes)) {
+        return {
+          pages: parsed.pages,
+          activePageId: active.id,
+          scene: active.scene,
+        };
+      }
+    }
+  } catch (e) {
+    console.error('Failed to restore canvas from localStorage:', e);
+  }
+  return null;
+}
+
+function savePagesToStorage(pages: PukuPage[], activePageId: string) {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(
+      SCENE_STORAGE_KEY,
+      JSON.stringify({ pages, activePageId })
+    );
+  } catch (e) {
+    /* ignore quota / privacy errors */
+  }
+}
+
 /** Wrap Zustand's `set` so that any time `scene` changes, the active page's
  *  stored scene mirrors it. This keeps `state.scene` and
  *  `state.pages[activePageId].scene` synchronized without touching every
@@ -232,7 +268,8 @@ type SetState = (
 ) => void;
 
 export const useCanvasStore = create<PukuState>((rawSet, get) => {
-  // Wrap `set` to mirror scene into pages[activePageId].scene automatically.
+  // Wrap `set` to mirror scene into pages[activePageId].scene automatically
+  // and persist state to localStorage.
   let mirroring = false;
   const set: SetState = (partial, replace) => {
     // Compute the next partial.
@@ -246,18 +283,19 @@ export const useCanvasStore = create<PukuState>((rawSet, get) => {
     if (mirroring) return;
     const state = get();
     const active = state.pages.find((p) => p.id === state.activePageId);
+    let updatedPages = state.pages;
     if (active && active.scene !== state.scene) {
       mirroring = true;
       try {
-        rawSet({
-          pages: state.pages.map((p) =>
-            p.id === state.activePageId ? { ...p, scene: state.scene } : p
-          ),
-        });
+        updatedPages = state.pages.map((p) =>
+          p.id === state.activePageId ? { ...p, scene: state.scene } : p
+        );
+        rawSet({ pages: updatedPages });
       } finally {
         mirroring = false;
       }
     }
+    savePagesToStorage(updatedPages, state.activePageId);
   };
 
   /** Push the current scene onto the undo stack before a mutation. */
@@ -269,12 +307,15 @@ export const useCanvasStore = create<PukuState>((rawSet, get) => {
     });
   }
 
-  // Initial state: one page called "Page 1".
-  const initialScene = createEmptyScene('My Puku Canvas');
-  const initialPageId = cryptoRandomId();
+  // Restore saved state from localStorage or initialize defaults
+  const stored = readStoredPages();
+  const initialScene = stored?.scene ?? createEmptyScene('My Puku Canvas');
+  const initialPageId = stored?.activePageId ?? cryptoRandomId();
+  const initialPages = stored?.pages ?? [{ id: initialPageId, name: 'Page 1', scene: initialScene }];
+
   return {
     scene: initialScene,
-    pages: [{ id: initialPageId, name: 'Page 1', scene: initialScene }],
+    pages: initialPages,
     activePageId: initialPageId,
     selectedIds: new Set(),
     tool: 'select',
