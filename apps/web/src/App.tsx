@@ -7,6 +7,7 @@ import { AIFloatingBar, AISidePanel, AIBackdrop } from '@/components/ai/ai-panel
 import { AppMenu } from '@/components/menu/app-menu';
 import { PagesPanel, PagesBackdrop } from '@/components/pages/pages-panel';
 import { ShareModal } from '@/components/share/share-modal';
+import { UserAvatars } from '@/components/presence/user-avatars';
 import { useAIAnalysis } from '@/hooks/use-ai-analysis';
 import { useAutoAnalyze } from '@/hooks/use-auto-analyze';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
@@ -104,6 +105,7 @@ export function App() {
       <main className="workspace">
         <AppMenu />
         <Toolbar />
+        <UserAvatars />
         <button
           type="button"
           className="share-action-btn"
