@@ -1,0 +1,1253 @@
+/* ---------------------------------------------------------
+ * Puku Canvas — shadcn-style CSS variables
+ * Dark mode via .dark on <html>. HSL channels so Tailwind
+ * tokens (bg-primary, text-muted-foreground, etc.) compose.
+ * ------------------------------------------------------- */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 4%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 4%;
+    --primary: 243 75% 59%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 240 6% 10%;
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+    --accent: 243 75% 96%;
+    --accent-foreground: 243 75% 30%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 243 75% 59%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 4%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 243 75% 65%;
+    --primary-foreground: 240 10% 4%;
+    --secondary: 240 4% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 4% 16%;
+    --muted-foreground: 240 5% 65%;
+    --accent: 243 50% 20%;
+    --accent-foreground: 243 75% 90%;
+    --destructive: 0 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 4% 16%;
+    --input: 240 4% 16%;
+    --ring: 243 75% 65%;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* ---------------------------------------------------------
+ * App layout
+ * ------------------------------------------------------- */
+.app-shell {
+  display: grid;
+  /* Three columns: [pages panel][canvas][AI panel]. The middle column is
+     always 1fr; the side panels are 0fr when closed and 280px/360px when
+     open. The transition animates the column-width changes. */
+  grid-template-columns: 0fr 1fr 0fr;
+  height: 100vh;
+  transition: grid-template-columns 240ms ease;
+}
+
+/* Pages panel open (left column expanded). */
+.app-shell.pages-panel-open {
+  grid-template-columns: 280px 1fr 0fr;
+}
+
+/* AI panel open (right column expanded). */
+.app-shell.ai-panel-open {
+  grid-template-columns: 0fr 1fr 360px;
+}
+
+/* Both panels open (canvas shrinks in the middle). */
+.app-shell.pages-panel-open.ai-panel-open {
+  grid-template-columns: 280px 1fr 360px;
+}
+
+.workspace {
+  grid-column: 2;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ---------------------------------------------------------
+ * Toolbar (floating top-left)
+ * ------------------------------------------------------- */
+.toolbar {
+  position: absolute;
+  top: 12px;
+  /* Leave room for the AppMenu button (36px + 12px gap). */
+  left: 60px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+}
+
+/* Puku AI toggle (in toolbar) */
+.puku-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 10px;
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.puku-toggle:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.puku-toggle[data-on='true'] {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.18);
+}
+
+.puku-toggle[data-on='false'] {
+  /* Calmer OFF look — discoverable but quiet until the user enables AI. */
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+}
+
+.puku-toggle[data-on='false']:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-color: hsl(var(--primary) / 0.4);
+}
+
+.puku-toggle[data-on='false'] .dot {
+  /* Dim the dot when AI is off so it reads as inactive. */
+  opacity: 0.45;
+}
+
+.puku-toggle .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* ---------------------------------------------------------
+ * Color + typography controls (in toolbar)
+ * ------------------------------------------------------- */
+.color-popover,
+.typography-popover {
+  position: relative;
+  display: inline-flex;
+}
+
+.color-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 8px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.color-swatch:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.color-swatch[aria-pressed='true'] {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.18);
+}
+
+.color-swatch-fill {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  border: 1px solid hsl(var(--border));
+  flex-shrink: 0;
+}
+
+.color-swatch-outlined .color-swatch-fill {
+  /* Show a ring so a white-on-white swatch is still visible. */
+  border: 2px solid hsl(var(--border));
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+}
+
+.color-swatch-label {
+  user-select: none;
+}
+
+.color-popover-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+  min-width: 180px;
+}
+
+.color-popover-input {
+  width: 100%;
+  height: 36px;
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  cursor: pointer;
+  background: transparent;
+  padding: 0;
+}
+
+.color-popover-hex {
+  width: 100%;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  outline: none;
+}
+
+.color-popover-hex:focus {
+  border-color: hsl(var(--primary));
+}
+
+.color-popover-transparent {
+  width: 100%;
+  height: 24px;
+  padding: 0 8px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 4px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.color-popover-transparent:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+/* Typography popover */
+.typo-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.typo-button:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.typo-button[aria-pressed='true'] {
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.18);
+}
+
+.typo-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+  min-width: 220px;
+}
+
+.typo-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.typo-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: hsl(var(--muted-foreground));
+  font-weight: 600;
+}
+
+.typo-select {
+  width: 100%;
+  height: 28px;
+  padding: 0 6px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  outline: none;
+}
+
+.typo-select:focus {
+  border-color: hsl(var(--primary));
+}
+
+.typo-size-row,
+.typo-weight-row {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.typo-size-chip,
+.typo-weight-chip {
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 120ms ease;
+}
+
+.typo-size-chip:hover,
+.typo-weight-chip:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.typo-size-chip-active,
+.typo-weight-chip-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  border-color: hsl(var(--primary));
+}
+.canvas-svg {
+  width: 100%;
+  height: 100%;
+  /* Default canvas background; the user can override via the menu which
+     sets --canvas-bg on <html>. */
+  background-color: var(--canvas-bg, hsl(var(--background)));
+  background-image:
+    radial-gradient(circle, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  /* Background offset is driven by inline CSS vars so the dot grid pans
+     with the viewport. --grid-step is the dot spacing (in screen px). */
+  background-size: var(--grid-step, 20px) var(--grid-step, 20px);
+  background-position: var(--grid-x, 0px) var(--grid-y, 0px);
+  cursor: crosshair;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+
+.dark .canvas-svg {
+  background-color: var(--canvas-bg, #121212);
+  background-image:
+    radial-gradient(circle, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+}
+
+.canvas-svg.tool-select {
+  cursor: default;
+}
+
+.canvas-svg.tool-arrow,
+.canvas-svg.tool-line {
+  cursor: crosshair;
+}
+
+.canvas-svg.tool-freedraw {
+  cursor: crosshair;
+}
+
+.canvas-svg.tool-pan,
+.canvas-svg.is-panning {
+  cursor: grab;
+}
+
+.canvas-svg.is-panning {
+  cursor: grabbing;
+}
+
+.shape-node {
+  cursor: move;
+}
+
+.shape-node text {
+  font-size: 14px;
+  fill: hsl(var(--foreground));
+  pointer-events: none;
+  user-select: none;
+}
+
+.shape-node.selected rect,
+.shape-node.selected ellipse,
+.shape-node.selected polygon {
+  stroke: hsl(var(--primary));
+  stroke-width: 2;
+}
+
+.shape-node .resize-handle {
+  fill: hsl(var(--background));
+  stroke: hsl(var(--primary));
+  stroke-width: 1.5;
+  cursor: nwse-resize;
+}
+
+.shape-node .resize-handle.handle-n,
+.shape-node .resize-handle.handle-s {
+  cursor: ns-resize;
+}
+
+.shape-node .resize-handle.handle-e,
+.shape-node .resize-handle.handle-w {
+  cursor: ew-resize;
+}
+
+.shape-node .resize-handle.handle-ne,
+.shape-node .resize-handle.handle-sw {
+  cursor: nesw-resize;
+}
+
+.text-editor-input {
+  width: 100%;
+  height: 100%;
+  border: 2px solid hsl(var(--primary));
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 14px;
+  text-align: center;
+  outline: none;
+  padding: 4px;
+  border-radius: 4px;
+  font-family: inherit;
+}
+
+.marquee-rect {
+  fill: hsl(var(--primary) / 0.08);
+  stroke: hsl(var(--primary));
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+  pointer-events: none;
+}
+
+.connector text {
+  font-size: 12px;
+  fill: hsl(var(--muted-foreground));
+  pointer-events: none;
+  user-select: none;
+}
+
+.connector.selected path:not(.connector-endpoint):not([stroke='transparent']) {
+  stroke: hsl(var(--primary));
+}
+
+.connector-endpoint {
+  cursor: grab;
+}
+
+.connector-endpoint:active {
+  cursor: grabbing;
+}
+
+/* ---------------------------------------------------------
+ * Hamburger app menu (top-left of canvas)
+ * ------------------------------------------------------- */
+.app-menu {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  z-index: 11;
+}
+
+.app-menu-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  width: 36px;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--card));
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  transition: all 150ms ease;
+}
+
+.app-menu-button:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.app-menu-panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 30;
+  width: 280px;
+  /* Cap the panel at ~70% of viewport height so it never spills off-screen.
+     Internal scroll if content exceeds the cap. */
+  max-height: 70vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.06),
+    0 8px 24px rgba(0, 0, 0, 0.08);
+  padding: 6px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* Subtle scrollbar styling. */
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+  /* Open/close animation — fade + slight slide down. */
+  transform-origin: top left;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.app-menu-panel[data-state='open'] {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+.app-menu-panel[data-state='closed'] {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+  pointer-events: none;
+}
+
+.app-menu-panel::-webkit-scrollbar {
+  width: 6px;
+}
+
+.app-menu-panel::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 3px;
+}
+
+.app-menu-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* The hamburger button lights up when its panel is open. */
+.app-menu-button[aria-expanded='true'] {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.menu-section {
+  display: flex;
+  flex-direction: column;
+  padding: 2px 0;
+}
+
+.menu-divider {
+  height: 1px;
+  margin: 6px 8px;
+  background: hsl(var(--border));
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  text-align: left;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 0 4px;
+  width: calc(100% - 8px);
+}
+
+.menu-item:hover:not(.disabled) {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.menu-item.disabled {
+  color: hsl(var(--muted-foreground));
+  opacity: 0.55;
+  cursor: default;
+}
+
+.menu-item.primary {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.menu-item .menu-shortcut {
+  margin-left: auto;
+  font-size: 11px;
+  color: hsl(var(--muted-foreground));
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.menu-chevron {
+  margin-left: auto;
+  color: hsl(var(--muted-foreground));
+}
+
+.menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 8px 12px;
+  margin: 0 4px;
+  width: calc(100% - 8px);
+}
+
+.menu-row-stack {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.menu-row-label {
+  font-size: 13px;
+  color: hsl(var(--foreground));
+}
+
+.theme-picker {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--border));
+  border-radius: 999px;
+}
+
+.theme-picker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  width: 36px;
+  border-radius: 999px;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.theme-picker-btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.theme-picker-btn-active {
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.lang-select {
+  width: 100%;
+  height: 30px;
+  padding: 0 8px;
+  border: 1px solid hsl(var(--border));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 12px;
+  outline: none;
+}
+
+.lang-select:focus {
+  border-color: hsl(var(--primary));
+}
+
+.bg-swatches {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.bg-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid hsl(var(--border));
+  cursor: pointer;
+  padding: 0;
+  transition: all 120ms ease;
+}
+
+.bg-swatch:hover {
+  transform: scale(1.1);
+}
+
+.bg-swatch-active {
+  border-color: hsl(var(--primary));
+  box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+}
+
+/* ---------------------------------------------------------
+ * AI floating control bar (top-right of canvas)
+ * Mirror of the drawing toolbar — logo + toggle + Analyze + close,
+ * floating above the canvas content.
+ * ------------------------------------------------------- */
+.ai-floating-bar {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+  box-shadow:
+    0 1px 2px rgba(0, 0, 0, 0.05),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  z-index: 10;
+}
+
+.ai-floating-logo {
+  display: block;
+  width: 24px;
+  height: 24px;
+  user-select: none;
+  -webkit-user-drag: none;
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+.ai-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  width: 32px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.ai-close-btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+/* ---------------------------------------------------------
+ * AI side panel — slide-in from the right.
+ * ------------------------------------------------------- */
+.ai-side-panel {
+  grid-column: 3;
+  background: hsl(var(--card));
+  border-left: 1px solid hsl(var(--border));
+  padding: 16px 20px 20px;
+  min-width: 0;
+  overflow: hidden;
+  /* The grid template-columns transition handles the slide-in/out smoothly. */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.ai-side-panel-header {
+  padding-bottom: 12px;
+  border-bottom: 1px solid hsl(var(--border));
+  margin-bottom: 12px;
+}
+
+/* Click-outside backdrop. Sits over the canvas while the panel is open,
+   below the floating bar (z=10) but above the canvas itself. */
+.ai-backdrop {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 8;
+  cursor: default;
+}
+
+/* ---------------------------------------------------------
+ * Pages side panel — slide-in from the left.
+ * Mirrors the AI right-panel pattern but lives as the first grid column.
+ * ------------------------------------------------------- */
+.pages-side-panel {
+  grid-column: 1;
+  background: hsl(var(--card));
+  border-right: 1px solid hsl(var(--border));
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+}
+
+.pages-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 16px 12px;
+  border-bottom: 1px solid hsl(var(--border));
+}
+
+.pages-panel-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: hsl(var(--foreground));
+}
+
+.pages-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+  width: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pages-close-btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+}
+
+.pages-panel-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 12px;
+  gap: 12px;
+  overflow-y: auto;
+}
+
+.pages-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px dashed hsl(var(--border));
+  border-radius: 6px;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.pages-new-btn:hover {
+  background: hsl(var(--accent));
+  color: hsl(var(--accent-foreground));
+  border-color: hsl(var(--primary));
+}
+
+.pages-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.pages-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+  cursor: pointer;
+  transition: all 100ms ease;
+  user-select: none;
+}
+
+.pages-item:hover {
+  background: hsl(var(--accent));
+}
+
+.pages-item-active {
+  background: hsl(var(--primary) / 0.12);
+  color: hsl(var(--primary));
+}
+
+.pages-item-active:hover {
+  background: hsl(var(--primary) / 0.18);
+}
+
+.pages-item-icon {
+  flex-shrink: 0;
+  color: hsl(var(--muted-foreground));
+}
+
+.pages-item-active .pages-item-icon {
+  color: hsl(var(--primary));
+}
+
+.pages-item-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pages-item-input {
+  flex: 1;
+  height: 24px;
+  padding: 0 6px;
+  border: 1px solid hsl(var(--primary));
+  border-radius: 4px;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-size: 13px;
+  outline: none;
+  font-family: inherit;
+}
+
+.pages-item-delete {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  width: 22px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  color: hsl(var(--muted-foreground));
+  cursor: pointer;
+  opacity: 0;
+  transition: all 120ms ease;
+}
+
+.pages-item:hover .pages-item-delete {
+  opacity: 1;
+}
+
+.pages-item-delete:hover {
+  background: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
+}
+
+/* Click-outside backdrop for pages panel. */
+.pages-backdrop {
+  position: absolute;
+  inset: 0;
+  background: transparent;
+  z-index: 8;
+  cursor: default;
+}
+
+.empty-hint {
+  color: hsl(var(--muted-foreground));
+  font-size: 13px;
+  font-style: italic;
+}
+
+.error-text {
+  color: hsl(var(--destructive));
+  font-size: 13px;
+}
+
+.summary-text {
+  font-size: 14px;
+  line-height: 1.55;
+  color: hsl(var(--foreground));
+}
+
+.uncertainty-text {
+  color: hsl(var(--muted-foreground));
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ---------------------------------------------------------
+ * Share Button & Share Modal
+ * ------------------------------------------------------- */
+.share-action-btn {
+  position: absolute;
+  top: 12px;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: var(--radius);
+  border: none;
+  box-shadow: 0 2px 6px hsl(var(--primary) / 0.3);
+  cursor: pointer;
+  z-index: 10;
+  transition: all 150ms ease;
+}
+
+.share-action-btn:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.share-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: shareFadeIn 150ms ease-out;
+}
+
+@keyframes shareFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.share-modal-content {
+  width: 90%;
+  max-width: 480px;
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: calc(var(--radius) * 1.5);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  padding: 20px;
+  animation: shareSlideUp 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes shareSlideUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.share-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.share-modal-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.share-modal-title h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0;
+  color: hsl(var(--foreground));
+}
+
+.share-modal-close {
+  padding: 6px;
+  border-radius: var(--radius);
+  color: hsl(var(--muted-foreground));
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.share-modal-close:hover {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+}
+
+.share-modal-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.share-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: hsl(var(--muted) / 0.5);
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius);
+}
+
+.share-info-text strong {
+  display: block;
+  font-size: 13px;
+  color: hsl(var(--foreground));
+}
+
+.share-info-text p {
+  margin: 2px 0 0 0;
+  font-size: 12px;
+  color: hsl(var(--muted-foreground));
+}
+
+.share-input-group {
+  display: flex;
+  gap: 8px;
+}
+
+.share-input-wrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  background: hsl(var(--background));
+  border: 1px solid hsl(var(--input));
+  border-radius: var(--radius);
+}
+
+.share-url-input {
+  width: 100%;
+  padding: 8px 12px;
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  font-family: monospace;
+  color: hsl(var(--foreground));
+  outline: none;
+}
+
+.share-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 16px;
+  height: 38px;
+  background: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 150ms ease;
+}
+
+.share-copy-btn.copied {
+  background: #22c55e;
+}
+
+.share-native-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 38px;
+  background: hsl(var(--secondary));
+  color: hsl(var(--secondary-foreground));
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius);
+  border: 1px solid hsl(var(--border));
+  cursor: pointer;
+}
