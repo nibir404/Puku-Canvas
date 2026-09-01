@@ -1,19 +1,18 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serve } from '@hono/node-server';
+import { handle } from 'hono/vercel';
 import type { AnalyzeRequest, AnalyzeResponse } from '@puku/types';
 import { describeScene, runHeuristics } from '@puku/core';
 import { analyze, buildPrompt, createLLMClientFromEnv, SYSTEM_PROMPT } from '@puku/ai';
 
-const app = new Hono();
+export const app = new Hono();
 
 app.use('*', cors());
 
 const llmClient = createLLMClientFromEnv();
 
-app.get('/health', (c) => c.json({ ok: true, ts: Date.now() }));
-
-app.post('/api/analyze', async (c) => {
+const analyzeHandler = async (c: any) => {
   let body: AnalyzeRequest;
   try {
     body = await c.req.json();
@@ -36,10 +35,15 @@ app.post('/api/analyze', async (c) => {
     latencyMs: Date.now() - started,
   };
   return c.json(response);
-});
+};
+
+app.get('/health', (c) => c.json({ ok: true, ts: Date.now() }));
+app.get('/api/health', (c) => c.json({ ok: true, ts: Date.now() }));
+
+app.post('/api/analyze', analyzeHandler);
+app.post('/analyze', analyzeHandler);
 
 app.get('/api/preview', (c) => {
-  // Diagnostic — returns the prompt that *would* be sent, without calling the LLM.
   const url = new URL(c.req.url);
   const sceneParam = url.searchParams.get('scene');
   if (!sceneParam) return c.text('Missing ?scene=...', 400);
@@ -57,8 +61,13 @@ app.get('/api/preview', (c) => {
   }
 });
 
-const port = Number(process.env.PORT ?? 3001);
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  const port = Number(process.env.PORT ?? 3001);
+  serve({ fetch: app.fetch, port }, (info) => {
+    console.log(`[puku-server] listening on http://localhost:${info.port}`);
+  });
+}
 
-serve({ fetch: app.fetch, port }, (info) => {
-  console.log(`[puku-server] listening on http://localhost:${info.port}`);
-});
+export const GET = handle(app);
+export const POST = handle(app);
+export default handle(app);
