@@ -27,15 +27,22 @@ export const stubLLM: LLMClient = {
   },
 };
 
+function getEnv(key: string): string | undefined {
+  if (typeof process !== 'undefined' && process.env) {
+    return process.env[key];
+  }
+  return undefined;
+}
+
 /**
  * Creates an LLMClient instance based on available environment variables.
  * Supports OpenAI (OPENAI_API_KEY) and Gemini (GEMINI_API_KEY).
  * Falls back to stubLLM (heuristics) if no key is present.
  */
 export function createLLMClientFromEnv(): LLMClient {
-  const groqKey = process.env.GROQ_API_KEY;
-  const openAiKey = process.env.OPENAI_API_KEY;
-  const geminiKey = process.env.GEMINI_API_KEY;
+  const groqKey = getEnv('GROQ_API_KEY');
+  const openAiKey = getEnv('OPENAI_API_KEY');
+  const geminiKey = getEnv('GEMINI_API_KEY');
 
   if (groqKey) {
     return {
