@@ -1,0 +1,5 @@
+{
+  "buildCommand": "cd ../.. && pnpm build",
+  "outputDirectory": "../web/dist",
+  "framework": null
+}
